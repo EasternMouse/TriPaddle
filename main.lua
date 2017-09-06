@@ -1,21 +1,29 @@
 vector = require("vector")
 
 local score = 0
-local speed = 1
+local reflectCount = 0
+local speedupOnCount = 2
+local speedupValue = 1.25
 local gamestate = 'play'
-local animations = {}
 --
 --colors
 local colors = {}
 colors.red = {
-  value = {200, 40, 40}, 
+  value = {200, 40, 40, 255}, 
   name = 'red'}
 colors.green = {
-  value = {40, 200, 40}, 
+  value = {40, 200, 40, 255}, 
   name = 'green'}
 colors.blue = {
-  value = {40, 40, 200}, 
+  value = {40, 40, 200, 255}, 
   name = 'blue'}
+local colorsSide = {}
+colorsSide.gray = {
+  value = {180, 180, 180, 255},
+  name = 'gray'}
+colorsSide.white = {
+  value = {255, 255, 255, 255},
+  name = 'white'}
 --
 --paddle
 local paddle = {}
@@ -61,6 +69,7 @@ ball.init = function()
 end
 ball.update = function(dt)
   ball.position = ball.position + dt*ball.speed
+  animation.addParticle(ball.position, ball.size, ball.color, vector(0,0), vector(-100, -100), {0,0,0, 255*2}, 0.5)
 end
 ball.draw = function()
   love.graphics.setColor(ball.color.value)
@@ -125,7 +134,7 @@ walls.init = function()
   walls.currentWalls["bottom"] = wallB
 end
 walls.draw = function()
-  love.graphics.setColor(180,180,180)
+  love.graphics.setColor(colorsSide.gray.value)
   for _,wall in pairs(walls.currentWalls) do
     love.graphics.rectangle('fill', wall.position.x, wall.position.y, wall.size.x, wall.size.y)
   end
@@ -137,10 +146,17 @@ walls.newWall = function(positionX, positionY, width, height, state)
 end
 walls.resolveState = function(state)
   if state == 'wall' then
-    
+    --nothing
   elseif state == 'score' then
     score = score + 1
     ball.setRandomColor()
+    animation.addParticle(ball.position, ball.size, ball.color, vector(0,0), vector(100, 100), {0,0,0, 255}, 1)
+    reflectCount = reflectCount + 1
+    if reflectCount >= speedupOnCount then
+      reflectCount = 0
+      ball.speed = ball.speed * speedupValue
+      animation.addParticle(ball.position, ball.size, colorsSide.white, vector(0,0), vector(150, 150), {0,0,0, 255*2}, 0.5)
+    end
   elseif state == 'lose' then
     gamestate = 'gameover'
   end
@@ -202,14 +218,72 @@ collisions.checkRectanglesOverlap = function(a, b)
    
 end
 --
+--animations
+animation = {}
+animation.particles = {} --TTL, Position, Size, Color, dPosition, dSize, dColor
+animation.update = function(dt)
+  for i,particle in ipairs(animation.particles) do
+    particle.TTL = particle.TTL - dt
+    particle.size = particle.size + particle.dSize/2 * dt
+    particle.position = particle.position - particle.dSize/4 * dt
+    for i, oneValue in ipairs(particle.color.value) do
+      particle.color.value[i] = oneValue - particle.dColor[i] * dt
+    end
+    if particle.TTL <= 0 then 
+      table.remove(animation.particles, i) 
+    end
+  end
+end
+animation.draw = function()
+  for _,particle in pairs(animation.particles) do
+      love.graphics.setColor(particle.color.value)
+      love.graphics.rectangle('fill', particle.position.x, particle.position.y, particle.size.x, particle.size.y)
+  end
+end
+animation.addParticle = function(position, size, color, dPosition, dSize, dColor, TTL)
+  local particle = {
+    position = position,
+    size = size,
+    color = deepCopy(color),
+    dPosition = dPosition,
+    dSize = dSize,
+    dColor = dColor,
+    TTL = TTL}
+  table.insert(animation.particles, particle)
+end
+animation.clear = function()
+  while #animation.particles > 0 do table.remove(animation.particles) end
+end
+--generalpurpose
 function waitForContinueFromGameOver()
   if love.keyboard.isDown("return") then
-    paddle.init()
-    ball.init()
-    walls.init()
-    score = 0
-    gamestate = 'play'
+    reset()
   end
+end
+function reset()
+  paddle.init()
+  ball.init()
+  walls.init()
+  animation.clear()
+  score = 0
+  gamestate = 'play'
+end
+function deepCopy(object)
+    local lookup_table = {}
+    local function _copy(object)
+        if type(object) ~= "table" then
+            return object
+        elseif lookup_table[object] then
+            return lookup_table[object]
+        end
+        local new_table = {}
+        lookup_table[object] = new_table
+        for index, value in pairs(object) do
+            new_table[_copy(index)] = _copy(value)
+        end
+        return setmetatable(new_table, getmetatable(object))
+    end
+    return _copy(object)
 end
 --
 --love
@@ -219,16 +293,15 @@ function love.load(arg)
   love.graphics.setDefaultFilter('nearest')
   local font = love.graphics.newFont("assets/FFFFORWA.TTF",20)
   love.graphics.setFont(font)
-  paddle.init()
-  ball.init()
-  walls.init()
-  gamestate = 'play'
+  
+  reset()
 end
 function love.update(dt)
   if gamestate == 'play' then
     paddle.update(dt)
     ball.update(dt)
     collisions.resolveCollisions()
+    animation.update(dt)
   elseif gamestate == 'gameover' then
     waitForContinueFromGameOver()
   end
@@ -240,9 +313,11 @@ function love.draw()
   paddle.draw()
   ball.draw()
   walls.draw()
+  animation.draw()
   --
+  love.graphics.setColor(colorsSide.gray.value)
   love.graphics.print('Score: '..score, 460, 20,0,2,2)
   if gamestate == 'gameover' then
-    love.graphics.print('Game Over \n Press Enter to continue', 80,200)
+    love.graphics.print('Game Over\nPress Enter to continue', 80,200)
   end
 end
