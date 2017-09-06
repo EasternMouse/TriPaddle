@@ -359,24 +359,26 @@ function love.update(dt)
   end
 end
 function love.keypressed(key, scancode, isrepeat)
-  if scancode == 'left' then
-    paddle.speed = vector(-paddle.defSpeed, 0)
-  elseif scancode == 'right' then
-    paddle.speed = vector(paddle.defSpeed, 0)
+  if gamestate == 'play' then
+    if scancode == 'left' then
+      paddle.speed = vector(-paddle.defSpeed, 0)
+    elseif scancode == 'right' then
+      paddle.speed = vector(paddle.defSpeed, 0)
+    end
+    if scancode == 'z' then
+      paddle.color = colors.red
+    elseif scancode == 'x' then
+      paddle.color = colors.green
+    elseif scancode == 'c' then
+      paddle.color = colors.blue
+    end
+    if not isrepeat and
+           scancode == 'z' or
+           scancode == 'x' or
+           scancode == 'c' then
+      animation.addParticle(paddle.position, paddle.size, paddle.color, vector(0,0), vector(80, 80), {0,0,0, 255/0.3}, 0.3)
+    end 
   end
-  if scancode == 'z' then
-    paddle.color = colors.red
-  elseif scancode == 'x' then
-    paddle.color = colors.green
-  elseif scancode == 'c' then
-    paddle.color = colors.blue
-  end
-  if not isrepeat and
-         scancode == 'z' or
-         scancode == 'x' or
-         scancode == 'c' then
-    animation.addParticle(paddle.position, paddle.size, paddle.color, vector(0,0), vector(80, 80), {0,0,0, 255/0.3}, 0.3)
-  end 
   
   if scancode == 'return' and gamestate == 'gameover' then
     reset()
