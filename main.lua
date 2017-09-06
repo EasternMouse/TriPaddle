@@ -1,10 +1,13 @@
 vector = require("vector")
 
 local score = 0
+local highscore = 0
 local reflectCount = 0
 local speedupOnCount = 2
 local speedupValue = 1.25
+local paddleSpeedUpValue = 1.15
 local gamestate = 'play'
+local highscoreGet = false
 --
 --colors
 local colors = {}
@@ -32,12 +35,13 @@ paddle.init = function()
   paddle.size = vector(100, 20)
   paddle.speed = vector(0, 0)
   paddle.color = colors.red
+  paddle.defSpeed = 200
 end
 paddle.update = function(dt)
   if love.keyboard.isDown('left') then
-    paddle.speed = vector(-200, 0)
+    paddle.speed = vector(-paddle.defSpeed, 0)
   elseif love.keyboard.isDown('right') then
-    paddle.speed = vector(200, 0)
+    paddle.speed = vector(paddle.defSpeed, 0)
   else
     paddle.speed = vector(0, 0)
   end
@@ -94,6 +98,11 @@ ball.setRandomColor = function()
   end
    m = math.random(1,#keys)
    ball.color = colors[keys[m]]
+end
+ball.randomizeAngleFromWall = function()
+  local phi = (love.math.random() - 0.5) * math.pi/4
+  local alteredVector = ball.speed:rotated(phi)
+  ball.speed = alteredVector
 end
 --
 --walls
@@ -155,10 +164,16 @@ walls.resolveState = function(state)
     if reflectCount >= speedupOnCount then
       reflectCount = 0
       ball.speed = ball.speed * speedupValue
+      paddle.defSpeed = paddle.defSpeed * paddleSpeedUpValue
+      ball.randomizeAngleFromWall()
       animation.addParticle(ball.position, ball.size, colorsSide.white, vector(0,0), vector(150, 150), {0,0,0, 255*2}, 0.5)
     end
   elseif state == 'lose' then
     gamestate = 'gameover'
+    if highscore < score then
+      saveHighscore()
+      highscoreGet = true
+    end
   end
 end
 --
@@ -266,6 +281,9 @@ function reset()
   walls.init()
   animation.clear()
   score = 0
+  reflectCount = 0
+  loadHighscore()
+  highscoreGet = false
   gamestate = 'play'
 end
 function deepCopy(object)
@@ -284,6 +302,14 @@ function deepCopy(object)
         return setmetatable(new_table, getmetatable(object))
     end
     return _copy(object)
+end
+function loadHighscore()
+  local savestring = love.filesystem.read("score.dat")
+  pcall(function() highscore = 0 + savestring end)
+end
+function saveHighscore()
+  local savestring = score
+  love.filesystem.write("score.dat", savestring)
 end
 --
 --love
@@ -316,8 +342,11 @@ function love.draw()
   animation.draw()
   --
   love.graphics.setColor(colorsSide.gray.value)
-  love.graphics.print('Score: '..score, 460, 20,0,2,2)
+  love.graphics.print('Score: '..score..'\nHigh Score: \n                '..highscore, 460, 20, 0, 2, 2)
   if gamestate == 'gameover' then
     love.graphics.print('Game Over\nPress Enter to continue', 80,200)
+    if highscoreGet then
+      love.graphics.print('NEW HIGH SCORE!', 80,300)
+    end
   end
 end
