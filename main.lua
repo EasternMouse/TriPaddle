@@ -1,5 +1,6 @@
 vector = require("vector")
 
+version = 'v0.5'
 local score = 0
 local highscore = 0
 local reflectCount = 0
@@ -8,6 +9,14 @@ local speedupValue = 1.25
 local paddleSpeedUpValue = 1.15
 local gamestate = 'play'
 local highscoreGet = false
+--
+--sounds
+sounds = {}
+sounds.loadSounds = function()
+  sounds.hit1 = love.audio.newSource('assets/hit1.wav', 'static')
+  sounds.hit2 = love.audio.newSource('assets/hit2.wav', 'static')
+  sounds.lose = love.audio.newSource('assets/lose.wav', 'static')
+end
 --
 --colors
 local colors = {}
@@ -143,7 +152,11 @@ walls.newWall = function(positionX, positionY, width, height, state)
 end
 walls.resolveState = function(state)
   if state == 'wall' then
-    --nothing
+    if sounds.hit2:isPlaying() then
+      sounds.hit2:rewind()
+    else
+      sounds.hit2:play()
+    end
   elseif state == 'score' then
     score = score + 1
     ball.setRandomColor()
@@ -156,8 +169,14 @@ walls.resolveState = function(state)
       ball.randomizeAngleFromWall()
       animation.addParticle(ball.position, ball.size, colorsSide.white, vector(0,0), vector(150, 150), {0,0,0, 255*2}, 0.5)
     end
+    if sounds.hit2:isPlaying() then
+      sounds.hit2:rewind()
+    else
+      sounds.hit2:play()
+    end
   elseif state == 'lose' then
     gamestate = 'gameover'
+    sounds.lose:play()
     if highscore < score then
       saveHighscore()
       highscoreGet = true
@@ -187,7 +206,13 @@ collisions.ballPaddleCollision = function(ball, paddle)
     ball.rebound(shift)
     if not (ball.color.name == paddle.color.name) then
       gamestate = 'gameover'
+      sounds.lose:play()
+      if highscore < score then
+        saveHighscore()
+        highscoreGet = true
+      end
     end
+    sounds.hit1:play()
   end
 end
 collisions.paddleWallCollision = function(paddle, walls)
@@ -315,6 +340,8 @@ function writeSidebar()
   love.graphics.setColor(colorT.value)
   love.graphics.print('PADDLE', 590+4, 40, 0, 2, 2)
   
+  love.graphics.print(version, 700+4, 100, 0, 1.5, 1)
+  
   love.graphics.setColor(colors.red.value)
   love.graphics.print('T', 450, 20, 0, 3, 3)
   love.graphics.setColor(colors.green.value)
@@ -323,6 +350,8 @@ function writeSidebar()
   love.graphics.print('I', 560, 20, 0, 3, 3)
   love.graphics.setColor(colorsSide.white.value)
   love.graphics.print('PADDLE', 590, 40, 0, 2, 2)
+  
+  love.graphics.print(version, 700, 100, 0, 1.5, 1)
 
   love.graphics.setColor(colorsSide.gray.value)
   love.graphics.print('Score: '..score..'\nHigh Score: \n                '..highscore, 460, 160, 0, 2, 2)
@@ -347,6 +376,7 @@ function love.load(arg)
   love.graphics.setDefaultFilter('nearest')
   local font = love.graphics.newFont("assets/FFFFORWA.TTF",20)
   love.graphics.setFont(font)
+  sounds.loadSounds()
   
   reset()
 end
