@@ -18,7 +18,7 @@ colors.green = {
   value = {40, 200, 40, 255}, 
   name = 'green'}
 colors.blue = {
-  value = {40, 40, 200, 255}, 
+  value = {40, 40, 220, 255}, 
   name = 'blue'}
 local colorsSide = {}
 colorsSide.gray = {
@@ -38,21 +38,9 @@ paddle.init = function()
   paddle.defSpeed = 200
 end
 paddle.update = function(dt)
-  if love.keyboard.isDown('left') then
-    paddle.speed = vector(-paddle.defSpeed, 0)
-  elseif love.keyboard.isDown('right') then
-    paddle.speed = vector(paddle.defSpeed, 0)
-  else
+  if not (love.keyboard.isScancodeDown('left') or love.keyboard.isScancodeDown('right')) then
     paddle.speed = vector(0, 0)
   end
-  if love.keyboard.isDown('z') then
-    paddle.color = colors.red
-  elseif love.keyboard.isDown('x') then
-    paddle.color = colors.green
-  elseif love.keyboard.isDown('c') then
-    paddle.color = colors.blue
-  end
-  --
   paddle.position = paddle.position + dt*paddle.speed  
 end
 paddle.draw = function()
@@ -235,15 +223,13 @@ end
 --
 --animations
 animation = {}
-animation.particles = {} --TTL, Position, Size, Color, dPosition, dSize, dColor
+animation.particles = {}
 animation.update = function(dt)
   for i,particle in ipairs(animation.particles) do
     particle.TTL = particle.TTL - dt
     particle.size = particle.size + particle.dSize/2 * dt
     particle.position = particle.position - particle.dSize/4 * dt
-    for i, oneValue in ipairs(particle.color.value) do
-      particle.color.value[i] = oneValue - particle.dColor[i] * dt
-    end
+    doDColor(particle.color, particle.dColor, dt)
     if particle.TTL <= 0 then 
       table.remove(animation.particles, i) 
     end
@@ -269,12 +255,8 @@ end
 animation.clear = function()
   while #animation.particles > 0 do table.remove(animation.particles) end
 end
+--
 --generalpurpose
-function waitForContinueFromGameOver()
-  if love.keyboard.isDown("return") then
-    reset()
-  end
-end
 function reset()
   paddle.init()
   ball.init()
@@ -311,11 +293,57 @@ function saveHighscore()
   local savestring = score
   love.filesystem.write("score.dat", savestring)
 end
+function writeSidebar()
+  local colorHue = {0, 0, 255/8, 55}
+  local colorT = deepCopy(colors.red)
+  doDColor(colorT, colorHue)
+  love.graphics.setColor(colorT.value)
+  love.graphics.print('T', 450+5, 20, 0, 3, 3)
+  
+  colorT = deepCopy(colors.green)
+  doDColor(colorT, colorHue)
+  love.graphics.setColor(colorT.value)
+  love.graphics.print('R', 505+5, 20, 0, 3, 3)
+  
+  colorT = deepCopy(colors.blue)
+  doDColor(colorT, colorHue)
+  love.graphics.setColor(colorT.value)
+  love.graphics.print('I', 560+5, 20, 0, 3, 3)
+  
+  colorT = deepCopy(colorsSide.white)
+  doDColor(colorT, colorHue)
+  love.graphics.setColor(colorT.value)
+  love.graphics.print('PADDLE', 590+4, 40, 0, 2, 2)
+  
+  love.graphics.setColor(colors.red.value)
+  love.graphics.print('T', 450, 20, 0, 3, 3)
+  love.graphics.setColor(colors.green.value)
+  love.graphics.print('R', 505, 20, 0, 3, 3)
+  love.graphics.setColor(colors.blue.value)
+  love.graphics.print('I', 560, 20, 0, 3, 3)
+  love.graphics.setColor(colorsSide.white.value)
+  love.graphics.print('PADDLE', 590, 40, 0, 2, 2)
+
+  love.graphics.setColor(colorsSide.gray.value)
+  love.graphics.print('Score: '..score..'\nHigh Score: \n                '..highscore, 460, 160, 0, 2, 2)
+  
+  love.graphics.printf('Control paddle with left and right arrows\n\n'..
+                      'Ball should be reflected with same color paddle\n\n'..
+                      'Change color with Z, X and C buttons',
+                      460, 350, 800-460, 'center', 0, 0.8, 0.8)
+end
+function doDColor(color, dColor, dt)
+  dt = dt or 1
+  for i, oneValue in ipairs(color.value) do
+    color.value[i] = oneValue - dColor[i] * dt
+  end
+end
 --
 --love
 function love.load(arg)
   if arg[#arg] == "-debug" then require("mobdebug").start() end
   
+  love.keyboard.setKeyRepeat = False
   love.graphics.setDefaultFilter('nearest')
   local font = love.graphics.newFont("assets/FFFFORWA.TTF",20)
   love.graphics.setFont(font)
@@ -328,21 +356,39 @@ function love.update(dt)
     ball.update(dt)
     collisions.resolveCollisions()
     animation.update(dt)
-  elseif gamestate == 'gameover' then
-    waitForContinueFromGameOver()
   end
 end
 function love.keypressed(key, scancode, isrepeat)
+  if scancode == 'left' then
+    paddle.speed = vector(-paddle.defSpeed, 0)
+  elseif scancode == 'right' then
+    paddle.speed = vector(paddle.defSpeed, 0)
+  end
+  if scancode == 'z' then
+    paddle.color = colors.red
+  elseif scancode == 'x' then
+    paddle.color = colors.green
+  elseif scancode == 'c' then
+    paddle.color = colors.blue
+  end
+  if not isrepeat and
+         scancode == 'z' or
+         scancode == 'x' or
+         scancode == 'c' then
+    animation.addParticle(paddle.position, paddle.size, paddle.color, vector(0,0), vector(80, 80), {0,0,0, 255/0.3}, 0.3)
+  end 
   
+  if scancode == 'return' and gamestate == 'gameover' then
+    reset()
+  end
 end
 function love.draw()
   paddle.draw()
   ball.draw()
   walls.draw()
   animation.draw()
-  --
-  love.graphics.setColor(colorsSide.gray.value)
-  love.graphics.print('Score: '..score..'\nHigh Score: \n                '..highscore, 460, 20, 0, 2, 2)
+  writeSidebar()
+  
   if gamestate == 'gameover' then
     love.graphics.print('Game Over\nPress Enter to continue', 80,200)
     if highscoreGet then
