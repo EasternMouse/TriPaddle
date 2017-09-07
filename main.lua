@@ -86,6 +86,7 @@ ball.rebound = function(shift)
     ball.position.y = ball.position.y - shift.y
     ball.speed.y = -ball.speed.y
   end
+  ball.minAngle()
 end
 ball.setRandomColor = function()
   local keys, i = {}, 1
@@ -130,6 +131,19 @@ ball.determineActualShift = function(shiftBall)
       actualShift.y = shiftBall.y
    end
    return actualShift
+end
+ball.minAngle = function()
+   local minHorizontalAngle = math.rad( 20 )
+   local vX, vY = ball.speed:unpack()
+   local newVX, newVY = vX, vY
+   reboundAngle = math.abs(math.atan(vY/vX))
+   if reboundAngle < minHorizontalAngle then
+      newVX = sign(vX) * ball.speed:len() *
+         math.cos(minHorizontalAngle)
+      newVY = sign(vY) * ball.speed:len() *
+         math.sin(minHorizontalAngle)
+   end
+   ball.speed = vector(newVX, newVY)
 end
 --
 --walls
@@ -398,6 +412,7 @@ function doDColor(color, dColor, dt)
     color.value[i] = oneValue - dColor[i] * dt
   end
 end
+sign = math.sign or function(x) return x < 0 and -1 or x > 0 and 1 or 0 end
 --
 --love
 function love.load(arg)
