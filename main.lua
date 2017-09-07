@@ -97,9 +97,39 @@ ball.setRandomColor = function()
    ball.color = colors[keys[m]]
 end
 ball.randomizeAngleFromWall = function()
-  local phi = (love.math.random() - 0.5) * math.pi/4
+  local phi = love.math.randomNormal(1,0) * math.pi/4
   local alteredVector = ball.speed:rotated(phi)
   ball.speed = alteredVector
+end
+ball.reboundFromPaddle = function(shift, paddle)
+   local actualShift = ball.determineActualShift(shift)
+   ball.position = ball.position - actualShift
+   if actualShift.x ~= 0 then
+      ball.speed.x = -ball.speed.x
+   end
+   if actualShift.y ~= 0 then
+      local sphereRadius = 200
+      local ballCenter = ball.position + ball.size/2
+      local platformCenter = paddle.position + paddle.size/2
+      local separation = (ballCenter - platformCenter)
+      local normalDirection = vector(separation.x/sphereRadius, -1)
+      local vNorm = ball.speed:projectOn(normalDirection )
+      local vTan = ball.speed - vNorm
+      local reverseVNorm = vNorm * (-1)
+      ball.speed = reverseVNorm + vTan
+   end
+end
+
+ball.determineActualShift = function(shiftBall)
+   local actualShift = vector(0, 0)
+   local minShift = math.min(math.abs(shiftBall.x ),
+                             math.abs(shiftBall.y))  
+   if math.abs(shiftBall.x) == minShift then
+      actualShift.x = shiftBall.x
+   else
+      actualShift.y = shiftBall.y
+   end
+   return actualShift
 end
 --
 --walls
@@ -193,7 +223,7 @@ collisions.resolveCollisions = function()
 end
 collisions.ballWallsCollision = function(ball, walls)
   for i, wall in pairs(walls.currentWalls) do
-    overlap, shift = collisions.checkRectanglesOverlap(ball, wall)    
+    local overlap, shift = collisions.checkRectanglesOverlap(ball, wall)    
     if overlap then
       ball.rebound(shift)
       walls.resolveState(wall.state)
@@ -201,9 +231,10 @@ collisions.ballWallsCollision = function(ball, walls)
   end
 end
 collisions.ballPaddleCollision = function(ball, paddle)
-   overlap, shift = collisions.checkRectanglesOverlap(ball, paddle)    
+  local overlap, shift = collisions.checkRectanglesOverlap(ball, paddle)    
   if overlap then
-    ball.rebound(shift)
+    ball.reboundFromPaddle(shift, paddle)
+    --ball.rebound(shift)
     if not (ball.color.name == paddle.color.name) then
       gamestate = 'gameover'
       sounds.lose:play()
@@ -217,7 +248,7 @@ collisions.ballPaddleCollision = function(ball, paddle)
 end
 collisions.paddleWallCollision = function(paddle, walls)
   for _, wall in pairs(walls.currentWalls) do
-    overlap, shift = collisions.checkRectanglesOverlap(paddle, wall)    
+    local overlap, shift = collisions.checkRectanglesOverlap(paddle, wall)    
     if overlap then
       paddle.rebound(shift)
     end
