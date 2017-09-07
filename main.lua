@@ -150,49 +150,71 @@ end
 local walls = {}
 walls.currentWalls = {}
 walls.init = function()
-  local wallL = walls.newWall(
+--drawable 
+  walls.newWall(
     0,
     0,
     20,
     600,
-    'wall'
-  )
-  local wallR = walls.newWall(
+    'draw')
+  walls.newWall(
     420,
     0,
     20,
     600,
-    'wall'
-  )
-  local wallT = walls.newWall(
+    'draw')
+  walls.newWall(
     0,
     0,
     420,
     20,
-    'score'
-  )
-  local wallB = walls.newWall(
+    'draw')
+  walls.newWall(
     0,
     580,
     420,
     20,
-    'lose'
-  )
-  walls.currentWalls["left"] = wallL
-  walls.currentWalls["right"] = wallR
-  walls.currentWalls["top"] = wallT
-  walls.currentWalls["bottom"] = wallB
+    'draw')
+  
+--colision  
+  walls.newWall(
+    0-400,
+    0-400,
+    20+400,
+    600+400,
+    'wall')
+  walls.newWall(
+    420,
+    0-400,
+    20+400,
+    600+400,
+    'wall')
+  walls.newWall(
+    0-400,
+    0-400,
+    420+800,
+    20+400,
+    'score')
+  walls.newWall(
+    0-400,
+    580,
+    420+800,
+    20+400,
+    'lose')
 end
 walls.draw = function()
   love.graphics.setColor(colorsSide.gray.value)
   for _,wall in pairs(walls.currentWalls) do
-    love.graphics.rectangle('fill', wall.position.x, wall.position.y, wall.size.x, wall.size.y)
+    if wall.state == 'draw' then
+      love.graphics.rectangle('fill', wall.position.x, wall.position.y, wall.size.x, wall.size.y)
+    end
   end
 end
 walls.newWall = function(positionX, positionY, width, height, state)
-   return( { position = vector(positionX, positionY),
+  table.insert(walls.currentWalls,
+            {position = vector(positionX, positionY),
              size = vector(width, height),
-             state = state} )
+             state = state})
 end
 walls.resolveState = function(state)
   if state == 'wall' then
@@ -237,11 +259,13 @@ collisions.resolveCollisions = function()
 end
 collisions.ballWallsCollision = function(ball, walls)
   for i, wall in pairs(walls.currentWalls) do
-    local overlap, shift = collisions.checkRectanglesOverlap(ball, wall)    
-    if overlap then
-      ball.rebound(shift)
-      walls.resolveState(wall.state)
-    end   
+    if wall.state ~= 'draw' then
+      local overlap, shift = collisions.checkRectanglesOverlap(ball, wall)    
+      if overlap then
+        ball.rebound(shift)
+        walls.resolveState(wall.state)
+      end   
+    end
   end
 end
 collisions.ballPaddleCollision = function(ball, paddle)
