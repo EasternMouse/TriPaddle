@@ -1,6 +1,6 @@
 vector = require("vector")
 
-version = 'v0.7'
+version = 'v0.7.5'
 local score = 0
 local highscore = 0
 local reflectCount = 0
@@ -85,7 +85,7 @@ ball.rebound = function(shift)
   else
     ball.position.y = ball.position.y - shift.y
     ball.speed.y = -ball.speed.y
-  end  
+  end
   ball.minAngle()
 end
 ball.setRandomColor = function()
@@ -265,7 +265,7 @@ collisions.ballWallsCollision = function(ball, walls)
       if overlap then
         ball.rebound(shift)
         walls.resolveState(wall.state)
-      end   
+      end
     end
   end
 end
@@ -410,7 +410,7 @@ function writeSidebar()
   love.graphics.setColor(colorT.value)
   love.graphics.print('PADDLE', 590+4, 40, 0, 2, 2)
   
-  love.graphics.print(version, 700+4, 100, 0, 1.5, 1)
+  love.graphics.print(version, 660+4, 100, 0, 1.5, 1)
   
   love.graphics.setColor(colors.red.value)
   love.graphics.print('T', 450, 20, 0, 3, 3)
@@ -421,7 +421,7 @@ function writeSidebar()
   love.graphics.setColor(colorsSide.white.value)
   love.graphics.print('PADDLE', 590, 40, 0, 2, 2)
   
-  love.graphics.print(version, 700, 100, 0, 1.5, 1)
+  love.graphics.print(version, 660, 100, 0, 1.5, 1)
 
   love.graphics.setColor(colorsSide.gray.value)
   love.graphics.print('Score: '..score..'\nHigh Score: \n                '..highscore, 460, 160, 0, 2, 2)
@@ -481,7 +481,7 @@ function love.keypressed(key, scancode, isrepeat)
            scancode == 'x' or
            scancode == 'c' then
       animation.addParticle(paddle.position, paddle.size, paddle.color, vector(0,0), vector(200, 200), {0,0,0, 255/0.15}, 0.15)
-    end 
+    end
   end
   
   if scancode == 'return' and gamestate == 'gameover' then
