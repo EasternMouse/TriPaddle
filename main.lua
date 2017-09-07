@@ -355,13 +355,15 @@ end
 function reset()
   paddle.init()
   ball.init()
-  walls.init()
   animation.clear()
   score = 0
   reflectCount = 0
   loadHighscore()
   highscoreGet = false
   gamestate = 'play'
+end
+function initgame()
+  walls.init()
 end
 function deepCopy(object)
     local lookup_table = {}
@@ -443,12 +445,12 @@ sign = math.sign or function(x) return x < 0 and -1 or x > 0 and 1 or 0 end
 function love.load(arg)
   if arg[#arg] == "-debug" then require("mobdebug").start() end
   
-  love.keyboard.setKeyRepeat = False
   love.graphics.setDefaultFilter('nearest')
   local font = love.graphics.newFont("assets/FFFFORWA.TTF",20)
   love.graphics.setFont(font)
   sounds.loadSounds()
   
+  initgame()
   reset()
 end
 function love.update(dt)
