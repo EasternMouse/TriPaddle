@@ -1,11 +1,11 @@
 vector = require("vector")
 
-version = 'v0.5'
+version = 'v0.7'
 local score = 0
 local highscore = 0
 local reflectCount = 0
-local speedupOnCount = 2
-local speedupValue = 1.25
+local speedupOnCount = 3
+local speedupValue = 1.2
 local paddleSpeedUpValue = 1.15
 local gamestate = 'play'
 local highscoreGet = false
@@ -40,7 +40,7 @@ colorsSide.white = {
 --paddle
 local paddle = {}
 paddle.init = function()
-  paddle.position = vector(50, 520)
+  paddle.position = vector(170, 520)
   paddle.size = vector(100, 20)
   paddle.speed = vector(0, 0)
   paddle.color = colors.red
@@ -63,7 +63,7 @@ end
 --ball
 local ball = {}
 ball.init = function()
-  ball.position = vector(100, 100)
+  ball.position = vector(200, 50)
   ball.size = vector(50, 50)
   ball.speed = vector.fromPolar(math.pi/2 + math.pi * love.math.random()/4, 300)
   ball.color = colors.red
@@ -211,7 +211,7 @@ walls.resolveState = function(state)
       ball.speed = ball.speed * speedupValue
       paddle.defSpeed = paddle.defSpeed * paddleSpeedUpValue
       ball.randomizeAngleFromWall()
-      animation.addParticle(ball.position, ball.size, colorsSide.white, vector(0,0), vector(150, 150), {0,0,0, 255*2}, 0.5)
+      animation.addParticle(ball.position, ball.size, colorsSide.white, vector(0,0), vector(300, 300), {0,0,0, 255*2}, 0.5)
     end
     if sounds.hit2:isPlaying() then
       sounds.hit2:rewind()
@@ -452,7 +452,7 @@ function love.keypressed(key, scancode, isrepeat)
            scancode == 'z' or
            scancode == 'x' or
            scancode == 'c' then
-      animation.addParticle(paddle.position, paddle.size, paddle.color, vector(0,0), vector(80, 80), {0,0,0, 255/0.3}, 0.3)
+      animation.addParticle(paddle.position, paddle.size, paddle.color, vector(0,0), vector(200, 200), {0,0,0, 255/0.15}, 0.15)
     end 
   end
   
