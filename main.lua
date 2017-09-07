@@ -85,7 +85,7 @@ ball.rebound = function(shift)
   else
     ball.position.y = ball.position.y - shift.y
     ball.speed.y = -ball.speed.y
-  end
+  end  
   ball.minAngle()
 end
 ball.setRandomColor = function()
@@ -118,6 +118,7 @@ ball.reboundFromPaddle = function(shift, paddle)
       local vTan = ball.speed - vNorm
       local reverseVNorm = vNorm * (-1)
       ball.speed = reverseVNorm + vTan
+      ball.speed.y = -math.abs(ball.speed.y)
    end
 end
 
