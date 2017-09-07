@@ -427,6 +427,9 @@ function love.load(arg)
   reset()
 end
 function love.update(dt)
+  if dt >= 0.3 then
+    return
+  end
   if gamestate == 'play' then
     paddle.update(dt)
     ball.update(dt)
