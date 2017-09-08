@@ -1,7 +1,7 @@
 vector = require("vector")
 
 version = 'v0.7.7'
-local score = 0
+local score = '?'
 local highscore = 0
 local reflectCount = 0
 local speedupOnCount = 3
@@ -448,6 +448,7 @@ end
 function backToMenu()
   animation.clear()
   gamestate = 'mainmenu'
+  score = '?'
 end
 sign = math.sign or function(x) return x < 0 and -1 or x > 0 and 1 or 0 end
 --
