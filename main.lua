@@ -358,7 +358,7 @@ end
 function reset()
   paddle.init()
   ball.init()
-  animation.particles.clear()
+  animation.clear()
   score = 0
   reflectCount = 0
   loadHighscore()
@@ -367,7 +367,8 @@ function reset()
 end
 function initgame()
   walls.init()
-  reset()
+  loadHighscore()
+  menu.init()
 end
 function deepCopy(object)
     local lookup_table = {}
@@ -443,6 +444,11 @@ function doDColor(color, dColor, dt)
     color.value[i] = oneValue - dColor[i] * dt
   end
 end
+
+function backToMenu()
+  animation.clear()
+  gamestate = 'mainmenu'
+end
 sign = math.sign or function(x) return x < 0 and -1 or x > 0 and 1 or 0 end
 --
 --mainmenu
@@ -482,7 +488,7 @@ menu.init = function()
     'Start',
     vector(100, 100),
     vector(225, 90),
-    'f')
+    menu.playButton)
   menu.addButton(
     'Options',
     vector(100, 100+100),
@@ -501,12 +507,17 @@ menu.draw = function()
     love.graphics.rectangle('fill', button.position.x, button.position.y, button.size.x, button.size.y)
     love.graphics.setColor(button.textColor.value)
     love.graphics.print(button.name, button.position.x+5, button.position.y+15, 0, 3, 3)
-    end
+  end
 end
 
 menu.exitButton = function()
-  love.window.close()
+  os.exit()
 end
+menu.playButton = function()
+  reset()
+  gamestate = 'play'
+end
+
 --
 --love
 function love.load(arg)
@@ -517,8 +528,7 @@ function love.load(arg)
   love.graphics.setFont(font)
   sounds.loadSounds()
   
-  menu.init()
-  --initgame()
+  initgame()
 end
 function love.update(dt)
   if dt >= 0.3 then
@@ -554,24 +564,29 @@ function love.keypressed(key, scancode, isrepeat)
   elseif gamestate == 'mainmenu' then
     menu.controlButtons(scancode)
   end
-  if scancode == 'return' and gamestate == 'gameover' then
-    reset()
+  if gamestate == 'gameover' then
+    if scancode == 'return' then
+      reset()
+    elseif scancode == 'escape' then
+      backToMenu()
+    end
   end
 end
 function love.draw()
   if gamestate == 'play' or gamestate == 'gameover' then
     paddle.draw()
     ball.draw()
-    walls.draw()
-    writeSidebar()
   elseif gamestate == 'mainmenu' then
     menu.draw()
   end
   if gamestate == 'gameover' then
+    love.graphics.setColor(colorsSide.white.value)
     love.graphics.print('Game Over\nPress Enter to continue', 80,200)
     if highscoreGet then
       love.graphics.print('NEW HIGH SCORE!', 80,300)
     end
   end
-animation.draw()
+  walls.draw()
+  writeSidebar()
+  animation.draw()
 end
