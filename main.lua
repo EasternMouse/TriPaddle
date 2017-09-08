@@ -364,6 +364,7 @@ function reset()
 end
 function initgame()
   walls.init()
+  reset()
 end
 function deepCopy(object)
     local lookup_table = {}
@@ -441,6 +442,24 @@ function doDColor(color, dColor, dt)
 end
 sign = math.sign or function(x) return x < 0 and -1 or x > 0 and 1 or 0 end
 --
+--mainmenu
+menu = {}
+menu.buttons = {}
+menu.addButton = function(name, position, size, f)
+  table.insert(menu.buttons, {
+      name = name,
+      position = position,
+      size = size,
+      f = f}}
+end
+menu.buttonHover = function(mouseX, mouseY)
+  for each _, button in ipairs do
+    if collisions.checkRectanglesOverlap(button, {position = vector(mouseX, mouseY), size = vector(0, 0)}) then  
+      
+    end
+  end
+end
+--
 --love
 function love.load(arg)
   if arg[#arg] == "-debug" then require("mobdebug").start() end
@@ -451,7 +470,6 @@ function love.load(arg)
   sounds.loadSounds()
   
   initgame()
-  reset()
 end
 function love.update(dt)
   if dt >= 0.3 then
@@ -491,16 +509,17 @@ function love.keypressed(key, scancode, isrepeat)
   end
 end
 function love.draw()
-  paddle.draw()
-  ball.draw()
-  walls.draw()
-  animation.draw()
-  writeSidebar()
-  
+  if gamestate == 'play' or 'gameover' then
+    paddle.draw()
+    ball.draw()
+    walls.draw()
+    writeSidebar()
+  end  
   if gamestate == 'gameover' then
     love.graphics.print('Game Over\nPress Enter to continue', 80,200)
     if highscoreGet then
       love.graphics.print('NEW HIGH SCORE!', 80,300)
     end
   end
+animation.draw()
 end
