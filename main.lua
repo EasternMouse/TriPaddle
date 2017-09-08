@@ -7,7 +7,7 @@ local reflectCount = 0
 local speedupOnCount = 3
 local speedupValue = 1.2
 local paddleSpeedUpValue = 1.15
-local gamestate = 'play' --todo gameover | mainmenu | options | pausemenu
+local gamestate = 'mainmenu' --todo gameover | mainmenu | options | pausemenu
 local highscoreGet = false
 --
 --sounds
@@ -36,6 +36,9 @@ colorsSide.gray = {
 colorsSide.white = {
   value = {255, 255, 255, 255},
   name = 'white'}
+colorsSide.black = {
+  value = {0, 0, 0, 0},
+  name = 'black'}
 --
 --paddle
 local paddle = {}
@@ -355,7 +358,7 @@ end
 function reset()
   paddle.init()
   ball.init()
-  animation.clear()
+  animation.particles.clear()
   score = 0
   reflectCount = 0
   loadHighscore()
@@ -445,20 +448,51 @@ sign = math.sign or function(x) return x < 0 and -1 or x > 0 and 1 or 0 end
 --mainmenu
 menu = {}
 menu.buttons = {}
+menu.curentButton = 1
 menu.addButton = function(name, position, size, f)
   table.insert(menu.buttons, {
       name = name,
       position = position,
       size = size,
-      f = f}}
+      f = f,
+      color = colorsSide.gray,
+      textColor = colorsSide.white})
 end
-menu.buttonHover = function(mouseX, mouseY)
-  for each _, button in ipairs do
+menu.buttonHighlight = function(highlightedButton)
+  for _, button in ipairs(menu.buttons) do
     if collisions.checkRectanglesOverlap(button, {position = vector(mouseX, mouseY), size = vector(0, 0)}) then  
-      
+      button.color = colorsSide.gray
+      button.textColor = colorsSide.white
     end
   end
+  highlightedButton.color = colorsSide.white
+  highlightedButton.textColor = colorsSide.black
 end
+menu.scrollButtons = function(key)
+  if key == 'up' and menu.currentButton ~= 1 then
+    menu.currentButton = menu.currentButton - 1
+    menu.buttonHighlight(menu.buttons[menu.currentButton])
+  elseif key == 'down' and menu.currentButton ~= #menu.buttons then
+    menu.currentButton = menu.currentButton + 1
+    menu.buttonHighlight(menu.buttons[menu.currentButton])
+  end
+end
+menu.init = function()
+  menu.addButton(
+    'Start',
+    vector(100, 100),
+    vector(225, 90),
+    'f')
+end
+menu.draw = function()
+  for _, button in ipairs(menu.buttons) do
+    love.graphics.setColor(button.color.value)
+    love.graphics.rectangle('fill', button.position.x, button.position.y, button.size.x, button.size.y)
+    love.graphics.setColor(button.textColor.value)
+    love.graphics.print(button.name, button.position.x+5, button.position.y+15, 0, 3, 3)
+    end
+end
+
 --
 --love
 function love.load(arg)
@@ -469,7 +503,8 @@ function love.load(arg)
   love.graphics.setFont(font)
   sounds.loadSounds()
   
-  initgame()
+  menu.init()
+  --initgame()
 end
 function love.update(dt)
   if dt >= 0.3 then
@@ -509,12 +544,14 @@ function love.keypressed(key, scancode, isrepeat)
   end
 end
 function love.draw()
-  if gamestate == 'play' or 'gameover' then
+  if gamestate == 'play' or gamestate == 'gameover' then
     paddle.draw()
     ball.draw()
     walls.draw()
     writeSidebar()
-  end  
+  elseif gamestate == 'mainmenu' then
+    menu.draw()
+  end
   if gamestate == 'gameover' then
     love.graphics.print('Game Over\nPress Enter to continue', 80,200)
     if highscoreGet then
