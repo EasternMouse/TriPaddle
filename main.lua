@@ -486,17 +486,17 @@ end
 menu.init = function()
   menu.addButton(
     'Start',
-    vector(100, 100),
+    vector(60, 100),
     vector(225, 90),
     menu.playButton)
   menu.addButton(
     'Options',
-    vector(100, 100+100),
+    vector(60, 100+100),
     vector(310, 110),
     'f')
   menu.addButton(
     'Exit',
-    vector(100, 100+220),
+    vector(60, 100+220),
     vector(160, 90),
     menu.exitButton)
   menu.buttonHighlight(menu.buttons[1])
@@ -580,8 +580,14 @@ function love.draw()
     menu.draw()
   end
   if gamestate == 'gameover' then
+    local colorHue = {0, 0, 255/8, 55}
+    local colorT = deepCopy(colorsSide.white)
+    doDColor(colorT, colorHue)
+    love.graphics.setColor(colorT.value)
+    love.graphics.print('Game Over', 80+5, 80, 0, 2, 2)
     love.graphics.setColor(colorsSide.white.value)
-    love.graphics.print('Game Over\nPress Enter to continue', 80,200)
+    love.graphics.print('Game Over', 80, 80, 0, 2, 2)
+    love.graphics.print('Press Enter to retry\n\nPress Esc to leave\n to main menu', 80,200)
     if highscoreGet then
       love.graphics.print('NEW HIGH SCORE!', 80,300)
     end
