@@ -37,7 +37,7 @@ colorsSide.white = {
   value = {255, 255, 255, 255},
   name = 'white'}
 colorsSide.black = {
-  value = {0, 0, 0, 0},
+  value = {0, 0, 0, 225},
   name = 'black'}
 --
 --paddle
@@ -448,7 +448,7 @@ sign = math.sign or function(x) return x < 0 and -1 or x > 0 and 1 or 0 end
 --mainmenu
 menu = {}
 menu.buttons = {}
-menu.curentButton = 1
+menu.currentButton = 1
 menu.addButton = function(name, position, size, f)
   table.insert(menu.buttons, {
       name = name,
@@ -460,21 +460,21 @@ menu.addButton = function(name, position, size, f)
 end
 menu.buttonHighlight = function(highlightedButton)
   for _, button in ipairs(menu.buttons) do
-    if collisions.checkRectanglesOverlap(button, {position = vector(mouseX, mouseY), size = vector(0, 0)}) then  
-      button.color = colorsSide.gray
-      button.textColor = colorsSide.white
-    end
+    button.color = colorsSide.gray
+    button.textColor = colorsSide.white
   end
   highlightedButton.color = colorsSide.white
   highlightedButton.textColor = colorsSide.black
 end
-menu.scrollButtons = function(key)
+menu.controlButtons = function(key)
   if key == 'up' and menu.currentButton ~= 1 then
     menu.currentButton = menu.currentButton - 1
     menu.buttonHighlight(menu.buttons[menu.currentButton])
   elseif key == 'down' and menu.currentButton ~= #menu.buttons then
     menu.currentButton = menu.currentButton + 1
     menu.buttonHighlight(menu.buttons[menu.currentButton])
+  elseif key == 'return' then
+    menu.buttons[menu.currentButton].f()
   end
 end
 menu.init = function()
@@ -483,6 +483,17 @@ menu.init = function()
     vector(100, 100),
     vector(225, 90),
     'f')
+  menu.addButton(
+    'Options',
+    vector(100, 100+100),
+    vector(310, 110),
+    'f')
+  menu.addButton(
+    'Exit',
+    vector(100, 100+220),
+    vector(160, 90),
+    menu.exitButton)
+  menu.buttonHighlight(menu.buttons[1])
 end
 menu.draw = function()
   for _, button in ipairs(menu.buttons) do
@@ -493,6 +504,9 @@ menu.draw = function()
     end
 end
 
+menu.exitButton = function()
+  love.window.close()
+end
 --
 --love
 function love.load(arg)
@@ -537,8 +551,9 @@ function love.keypressed(key, scancode, isrepeat)
            scancode == 'c' then
       animation.addParticle(paddle.position, paddle.size, paddle.color, vector(0,0), vector(200, 200), {0,0,0, 255/0.15}, 0.15)
     end
+  elseif gamestate == 'mainmenu' then
+    menu.controlButtons(scancode)
   end
-  
   if scancode == 'return' and gamestate == 'gameover' then
     reset()
   end
