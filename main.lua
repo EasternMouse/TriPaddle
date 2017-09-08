@@ -493,7 +493,7 @@ menu.init = function()
     'Options',
     vector(60, 100+100),
     vector(310, 110),
-    'f')
+    function() end)
   menu.addButton(
     'Exit',
     vector(60, 100+220),
