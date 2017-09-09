@@ -7,7 +7,7 @@ local reflectCount = 0
 local speedupOnCount = 3
 local speedupValue = 1.2
 local paddleSpeedUpValue = 1.15
-local gamestate = 'mainmenu' --todo gameover | mainmenu | options | pausemenu
+local gamestate = 'mainmenu' --todo gameover OK | play OK | options | pausemenu
 local highscoreGet = false
 --
 --sounds
