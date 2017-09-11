@@ -642,7 +642,11 @@ function love.keypressed(key, scancode, isrepeat)
   elseif gamestate == 'mainmenu' then
     menu.controlButtons(scancode)
   elseif gamestate == 'options' then
-    options.controlButtons(scancode)
+    if scancode == 'escape' then
+      gamestate = 'mainmenu'
+    else
+      options.controlButtons(scancode)
+    end
   end
   if gamestate == 'gameover' then
     if scancode == 'return' then
