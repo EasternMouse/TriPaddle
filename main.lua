@@ -104,6 +104,7 @@ ball.randomizeAngleFromWall = function()
   local phi = love.math.randomNormal(1,0) * math.pi/4
   local alteredVector = ball.speed:rotated(phi)
   ball.speed = alteredVector
+  ball.speed.y = math.abs(ball.speed.y)
 end
 ball.reboundFromPaddle = function(shift, paddle)
    local actualShift = ball.determineActualShift(shift)
