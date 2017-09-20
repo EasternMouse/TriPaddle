@@ -1,6 +1,6 @@
 vector = require("vector")
 
-version = 'v0.7.7'
+version = 'v0.8'
 local score = '?'
 local highscore = 0
 local reflectCount = 0
@@ -10,7 +10,7 @@ local paddleSpeedUpValue = 1.15
 local gamestate = 'mainmenu' --todo gameover OK | play OK | options | pausemenu
 local highscoreGet = false
 local gameOptions = {}
-gameOptions.volumeSE = 10
+gameOptions.volumeSE = 5
 --
 --sounds
 sounds = {}
