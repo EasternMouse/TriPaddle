@@ -545,7 +545,7 @@ options.init = function()
     vector(60, 100),
     vector(225, 54),
     1,
-    nil)
+    options.resetHighscore)
   menu.addButton(
     options.buttons,
     'Sound Effects',
@@ -595,6 +595,12 @@ options.volumeLR = function(key)
   end
   love.audio.setVolume(gameOptions.volumeSE/10)
   sounds.play(sounds.hit1)
+end
+options.resetHighscore = function()
+  score = 0
+  saveHighscore()
+  score = '?'
+  loadHighscore()
 end
 --
 --love
