@@ -1,6 +1,6 @@
 vector = require("vector")
 
-version = 'v0.7.7'
+version = 'v0.8'
 local score = '?'
 local highscore = 0
 local reflectCount = 0
