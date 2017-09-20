@@ -10,7 +10,7 @@ local paddleSpeedUpValue = 1.15
 local gamestate = 'mainmenu' --todo gameover OK | play OK | options | pausemenu
 local highscoreGet = false
 local gameOptions = {}
-gameOptions.volumeSE = 10
+gameOptions.volumeSE = 5
 --
 --sounds
 sounds = {}
