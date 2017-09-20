@@ -1,6 +1,6 @@
 vector = require("vector")
 
-version = 'v0.8.1'
+version = 'v0.8.2'
 local score = '?'
 local highscore = 0
 local reflectCount = 0
@@ -664,6 +664,9 @@ function love.keypressed(key, scancode, isrepeat)
   end
 end
 function love.draw()
+  walls.draw()
+  writeSidebar()
+  animation.draw()
   if gamestate == 'play' or gamestate == 'gameover' then
     paddle.draw()
     ball.draw()
@@ -685,7 +688,4 @@ function love.draw()
       love.graphics.print('NEW HIGH SCORE!', 80,350)
     end
   end
-  walls.draw()
-  writeSidebar()
-  animation.draw()
 end
