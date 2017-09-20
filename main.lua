@@ -1,6 +1,6 @@
 vector = require("vector")
 
-version = 'v0.8'
+version = 'v0.8.1'
 local score = '?'
 local highscore = 0
 local reflectCount = 0
@@ -450,6 +450,7 @@ end
 
 function backToMenu()
   animation.clear()
+  loadHighscore()
   gamestate = 'mainmenu'
   score = '?'
 end
@@ -681,7 +682,7 @@ function love.draw()
     love.graphics.print('Game Over', 80, 80, 0, 2, 2)
     love.graphics.print('Press Enter to retry\n\nPress Esc to leave\n to main menu', 80,200)
     if highscoreGet then
-      love.graphics.print('NEW HIGH SCORE!', 80,300)
+      love.graphics.print('NEW HIGH SCORE!', 80,350)
     end
   end
   walls.draw()
