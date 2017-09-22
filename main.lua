@@ -454,6 +454,27 @@ function backToMenu()
   gamestate = 'mainmenu'
   score = '?'
 end
+--work with files
+function fileExists(file)
+  local f = io.open(file, "rb")
+  if f then f:close() end
+  return f ~= nil
+end
+function linesFrom(file)
+  if not fileEists(file) then return {} end
+  lines = {}
+  for line in io.lines(file) do 
+    lines[#lines + 1] = line
+  end
+  return lines
+end
+function readFormatted(file)
+  lines = linesFrom(file)
+  local list = {}
+  for line in lines do
+    
+end
+--
 sign = math.sign or function(x) return x < 0 and -1 or x > 0 and 1 or 0 end
 --
 --mainmenu
@@ -602,6 +623,16 @@ options.resetHighscore = function()
   saveHighscore()
   score = '?'
   loadHighscore()
+end
+--
+--config
+config = {}
+config.loadConfig = function()
+  
+end
+config.saveConfig = function(name, value)
+  --local savestring = score
+  --love.filesystem.write("score.dat", savestring)
 end
 --
 --love
