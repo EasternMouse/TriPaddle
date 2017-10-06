@@ -473,6 +473,7 @@ function readFormatted(file)
   local list = {}
   for line in lines do
     
+  end
 end
 --
 sign = math.sign or function(x) return x < 0 and -1 or x > 0 and 1 or 0 end
@@ -677,16 +678,16 @@ function love.keypressed(key, scancode, isrepeat)
            scancode == 'c' then
       animation.addParticle(paddle.position, paddle.size, paddle.color, vector(0,0), vector(200, 200), {0,0,0, 255/0.15}, 0.15)
     end
+    if scancode == 'escape' then
+      gamestate = 'pause'
+    end
   elseif gamestate == 'mainmenu' then
     menu.controlButtons(scancode)
-  elseif gamestate == 'options' then
+  elseif gamestate == 'pause' then
     if scancode == 'escape' then
-      gamestate = 'mainmenu'
-    else
-      options.controlButtons(scancode)
+      gamestate = 'play'
     end
-  end
-  if gamestate == 'gameover' then
+  elseif gamestate == 'gameover' then
     if scancode == 'return' then
       reset()
     elseif scancode == 'escape' then
@@ -698,7 +699,7 @@ function love.draw()
   walls.draw()
   writeSidebar()
   animation.draw()
-  if gamestate == 'play' or gamestate == 'gameover' then
+  if gamestate == 'play' or gamestate == 'gameover' or gamestate == 'pause' then
     paddle.draw()
     ball.draw()
   elseif gamestate == 'mainmenu' then
