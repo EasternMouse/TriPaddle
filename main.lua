@@ -1,13 +1,13 @@
 vector = require("vector")
 
-version = 'v0.9.1'
+version = 'v0.9.6'
 local score = '?'
 local highscore = 0
 local reflectCount = 0
 local speedupOnCount = 3
 local speedupValue = 1.2
 local paddleSpeedUpValue = 1.15
-local gamestate = 'mainmenu' --todo gameover OK | play OK | options (no save yet) | pausemenu OK
+local gamestate = 'mainmenu'
 local highscoreGet = false
 local gameOptions = {}
 gameOptions.volumeSE = 5
@@ -40,7 +40,7 @@ colors.blue = {
   name = 'blue'}
 local colorsSide = {}
 colorsSide.gray = {
-  value = {180, 180, 180, 255},
+  value = {170, 170, 170, 255},
   name = 'gray'}
 colorsSide.white = {
   value = {255, 255, 255, 255},
@@ -370,6 +370,7 @@ end
 function initgame()
   walls.init()
   loadHighscore()
+  config.loadConfig()
   menu.init()
   options.init()
 end
@@ -609,6 +610,7 @@ options.controlButtons = function(key)
   elseif key == 'left' or key == 'right' then
     if options.buttons[options.currentButton].fLR then options.buttons[options.currentButton].fLR(key) end
   elseif key == 'escape' then
+    config.saveConfig()
     gamestate = 'mainmenu'
   end
 end
@@ -644,11 +646,14 @@ end
 --config
 config = {}
 config.loadConfig = function()
-  
+  local savestring = love.filesystem.read("config.dat")
+  if not pcall(function() gameOptions.volumeSE = 0 + savestring end) then 
+    gameOptions.volumeSE = 5
+  end
 end
 config.saveConfig = function(name, value)
-  --local savestring = score
-  --love.filesystem.write("score.dat", savestring)
+  local savestring = gameOptions.volumeSE
+  love.filesystem.write("config.dat", savestring)
 end
 --
 --love
