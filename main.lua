@@ -608,6 +608,8 @@ options.controlButtons = function(key)
     if options.buttons[options.currentButton].f then options.buttons[options.currentButton].f(key) end
   elseif key == 'left' or key == 'right' then
     if options.buttons[options.currentButton].fLR then options.buttons[options.currentButton].fLR(key) end
+  elseif key == 'escape' then
+    gamestate = 'mainmenu'
   end
 end
 options.volumeLR = function(key)
@@ -683,6 +685,8 @@ function love.keypressed(key, scancode, isrepeat)
     end
   elseif gamestate == 'mainmenu' then
     menu.controlButtons(scancode)
+  elseif gamestate == 'options' then
+    options.controlButtons(scancode)
   elseif gamestate == 'pause' then
     if scancode == 'escape' then
       gamestate = 'play'
