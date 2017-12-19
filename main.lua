@@ -1,13 +1,13 @@
 vector = require("vector")
 
-version = 'v0.8.2'
+version = 'v0.9.1'
 local score = '?'
 local highscore = 0
 local reflectCount = 0
 local speedupOnCount = 3
 local speedupValue = 1.2
 local paddleSpeedUpValue = 1.15
-local gamestate = 'mainmenu' --todo gameover OK | play OK | options | pausemenu
+local gamestate = 'mainmenu' --todo gameover OK | play OK | options (no save yet) | pausemenu OK
 local highscoreGet = false
 local gameOptions = {}
 gameOptions.volumeSE = 5
@@ -628,6 +628,19 @@ options.resetHighscore = function()
   loadHighscore()
 end
 --
+--pause
+pause = {}
+pause.draw = function()
+  love.graphics.setColor(0,0,0,120)
+  love.graphics.rectangle('fill', 20, 20, 400, 560)
+  
+  love.graphics.setColor(colorsSide.white.value)
+  love.graphics.print('PAUSED', 60, 200, 0, 3, 3)
+  
+  love.graphics.print('Press Escape to continue', 40, 280, 0, 1, 1)
+  love.graphics.print('Press q to leave to main menu', 25, 310, 0, 1, 1)
+end
+--
 --config
 config = {}
 config.loadConfig = function()
@@ -690,6 +703,11 @@ function love.keypressed(key, scancode, isrepeat)
   elseif gamestate == 'pause' then
     if scancode == 'escape' then
       gamestate = 'play'
+    elseif scancode == 'q' then
+      if highscore < score then
+        saveHighscore()
+      end
+      backToMenu()
     end
   elseif gamestate == 'gameover' then
     if scancode == 'return' then
@@ -706,6 +724,9 @@ function love.draw()
   if gamestate == 'play' or gamestate == 'gameover' or gamestate == 'pause' then
     paddle.draw()
     ball.draw()
+    if gamestate == 'pause' then
+      pause.draw()
+    end
   elseif gamestate == 'mainmenu' then
     menu.draw()
   elseif gamestate == 'options' then
