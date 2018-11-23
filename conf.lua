@@ -1,6 +1,8 @@
 function love.conf(t)
   t.window.title = "TriPaddle by EasternMouse"
   t.identity = "Mouse_TriPaddle"
+  t.version = "11.0"
+  
   t.window.width = 800 
   t.window.height = 600
   

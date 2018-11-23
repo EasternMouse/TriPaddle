@@ -1,16 +1,14 @@
 vector = require("vector")
 
-version = 'v0.9.6'
+version = 'v0.9.8'
 local score = '?'
 local highscore = 0
-local reflectCount = 0
 local speedupOnCount = 3
 local speedupValue = 1.2
 local paddleSpeedUpValue = 1.15
 local gamestate = 'mainmenu'
 local highscoreGet = false
 local gameOptions = {}
-gameOptions.volumeSE = 5
 --
 --sounds
 sounds = {}
@@ -21,7 +19,7 @@ sounds.loadSounds = function()
 end
 sounds.play = function(sound)
   if sound:isPlaying() then
-    sound:rewind()
+    sound:seek(0)
   else
     sound:play()
   end
@@ -30,23 +28,23 @@ end
 --colors
 local colors = {}
 colors.red = {
-  value = {200, 40, 40, 255}, 
+  value = {0.75, 0.15, 0.15, 1}, 
   name = 'red'}
 colors.green = {
-  value = {40, 200, 40, 255}, 
+  value = {0.15, 0.75, 0.15, 1}, 
   name = 'green'}
 colors.blue = {
-  value = {40, 40, 220, 255}, 
+  value = {0.15, 0.15, 0.75, 1}, 
   name = 'blue'}
 local colorsSide = {}
 colorsSide.gray = {
-  value = {170, 170, 170, 255},
+  value = {0.66, 0.66, 0.66, 1},
   name = 'gray'}
 colorsSide.white = {
-  value = {255, 255, 255, 255},
+  value = {1, 1, 1, 1},
   name = 'white'}
 colorsSide.black = {
-  value = {0, 0, 0, 225},
+  value = {0, 0, 0, 1},
   name = 'black'}
 --
 --paddle
@@ -79,10 +77,11 @@ ball.init = function()
   ball.size = vector(50, 50)
   ball.speed = vector.fromPolar(math.pi/2 + math.pi * love.math.random()/4, 300)
   ball.color = colors.red
+  ball.reflectCount = 0
 end
 ball.update = function(dt)
   ball.position = ball.position + dt*ball.speed
-  animation.addParticle(ball.position, ball.size, ball.color, vector(0,0), vector(-100, -100), {0,0,0, 255*2}, 0.5)
+  animation.addParticle(ball.position, ball.size, ball.color, vector(0,0), vector(-100, -100), {0,0,0, 1/0.5}, 0.5)
 end
 ball.draw = function()
   love.graphics.setColor(ball.color.value)
@@ -134,7 +133,6 @@ ball.reboundFromPaddle = function(shift, paddle)
       ball.speed.y = -math.abs(ball.speed.y)
    end
 end
-
 ball.determineActualShift = function(shiftBall)
    local actualShift = vector(0, 0)
    local minShift = math.min(math.abs(shiftBall.x ),
@@ -147,7 +145,7 @@ ball.determineActualShift = function(shiftBall)
    return actualShift
 end
 ball.minAngle = function()
-   local minHorizontalAngle = math.rad( 20 )
+   local minHorizontalAngle = math.rad(20)
    local vX, vY = ball.speed:unpack()
    local newVX, newVY = vX, vY
    reboundAngle = math.abs(math.atan(vY/vX))
@@ -236,14 +234,14 @@ walls.resolveState = function(state)
   elseif state == 'score' then
     score = score + 1
     ball.setRandomColor()
-    animation.addParticle(ball.position, ball.size, ball.color, vector(0,0), vector(100, 100), {0,0,0, 255}, 1)
-    reflectCount = reflectCount + 1
-    if reflectCount >= speedupOnCount then
-      reflectCount = 0
+    animation.addParticle(ball.position, ball.size, ball.color, vector(0,0), vector(100, 100), {0,0,0, 1}, 1)
+    ball.reflectCount = ball.reflectCount + 1
+    if ball.reflectCount >= speedupOnCount then
+      ball.reflectCount = 0
       ball.speed = ball.speed * speedupValue
       paddle.defSpeed = paddle.defSpeed * paddleSpeedUpValue
       ball.randomizeAngleFromWall()
-      animation.addParticle(ball.position, ball.size, colorsSide.white, vector(0,0), vector(300, 300), {0,0,0, 255*2}, 0.5)
+      animation.addParticle(ball.position, ball.size, colorsSide.white, vector(0,0), vector(300, 300), {0,0,0, 1/1.5}, 1.5)
     end
     sounds.play(sounds.hit2)
   elseif state == 'lose' then
@@ -362,7 +360,7 @@ function reset()
   ball.init()
   animation.clear()
   score = 0
-  reflectCount = 0
+  ball.reflectCount = 0
   loadHighscore()
   highscoreGet = false
   gamestate = 'play'
@@ -371,6 +369,7 @@ function initgame()
   walls.init()
   loadHighscore()
   config.loadConfig()
+  love.audio.setVolume(gameOptions.volumeSE/10)
   menu.init()
   options.init()
 end
@@ -400,7 +399,7 @@ function saveHighscore()
   love.filesystem.write("score.dat", savestring)
 end
 function writeSidebar()
-  local colorHue = {0, 0, 255/8, 55}
+  local colorHue = {0, 0, 1/8, 0.2}
   local colorT = deepCopy(colors.red)
   doDColor(colorT, colorHue)
   love.graphics.setColor(colorT.value)
@@ -509,7 +508,7 @@ menu.controlButtons = function(key)
   elseif key == 'down' and menu.currentButton ~= #menu.buttons then
     menu.currentButton = menu.currentButton + 1
     menu.buttonHighlight(menu.buttons, menu.buttons[menu.currentButton])
-  elseif key == 'return' then
+  elseif key == 'return' or  key == 'z' then
     if menu.buttons[menu.currentButton].f then menu.buttons[menu.currentButton].f() end
   end
 end
@@ -605,11 +604,11 @@ options.controlButtons = function(key)
   elseif key == 'down' and options.currentButton ~= #options.buttons then
     options.currentButton = options.currentButton + 1
     menu.buttonHighlight(options.buttons, options.buttons[options.currentButton])
-  elseif key == 'return' then
+  elseif key == 'return' or key == 'z' then
     if options.buttons[options.currentButton].f then options.buttons[options.currentButton].f(key) end
   elseif key == 'left' or key == 'right' then
     if options.buttons[options.currentButton].fLR then options.buttons[options.currentButton].fLR(key) end
-  elseif key == 'escape' then
+  elseif key == 'escape' or  key == 'x' then
     config.saveConfig()
     gamestate = 'mainmenu'
   end
@@ -696,7 +695,7 @@ function love.keypressed(key, scancode, isrepeat)
            scancode == 'z' or
            scancode == 'x' or
            scancode == 'c' then
-      animation.addParticle(paddle.position, paddle.size, paddle.color, vector(0,0), vector(200, 200), {0,0,0, 255/0.15}, 0.15)
+      animation.addParticle(paddle.position, paddle.size, paddle.color, vector(0,0), vector(200, 200), {0,0,0, 1/0.15}, 0.15)
     end
     if scancode == 'escape' then
       gamestate = 'pause'
@@ -738,7 +737,7 @@ function love.draw()
     options.draw()
   end
   if gamestate == 'gameover' then
-    local colorHue = {0, 0, 255/8, 55}
+    local colorHue = {0, 0, 1/8, 0.2}
     local colorT = deepCopy(colorsSide.white)
     doDColor(colorT, colorHue)
     love.graphics.setColor(colorT.value)
