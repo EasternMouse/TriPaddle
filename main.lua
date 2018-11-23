@@ -419,9 +419,9 @@ function writeSidebar()
   colorT = deepCopy(colorsSide.white)
   doDColor(colorT, colorHue)
   love.graphics.setColor(colorT.value)
-  love.graphics.print('PADDLE', 590+4, 40, 0, 2, 2)
+  love.graphics.print('PADDLE', 590+3, 40, 0, 2, 2)
   
-  love.graphics.print(version, 660+4, 100, 0, 1.5, 1)
+  love.graphics.print(version, 660+3, 100, 0, 1.5, 1)
   
   love.graphics.setColor(colors.red.value)
   love.graphics.print('T', 450, 20, 0, 3, 3)
@@ -648,7 +648,7 @@ config = {}
 config.loadConfig = function()
   local savestring = love.filesystem.read("config.dat")
   if not pcall(function() gameOptions.volumeSE = 0 + savestring end) then 
-    gameOptions.volumeSE = 5
+    gameOptions.volumeSE = 3
   end
 end
 config.saveConfig = function(name, value)
