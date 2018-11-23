@@ -60,6 +60,7 @@ paddle.update = function(dt)
   if not (love.keyboard.isScancodeDown('left') or love.keyboard.isScancodeDown('right')) then
     paddle.speed = vector(0, 0)
   end
+  animation.addParticle(paddle.position, paddle.size, paddle.color, vector(0,0), vector(0, -20), {0,0,0, 1/0.1}, 0.1)
   paddle.position = paddle.position + dt*paddle.speed  
 end
 paddle.draw = function()
