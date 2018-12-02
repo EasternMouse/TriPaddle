@@ -1,16 +1,14 @@
 vector = require("vector")
 
-version = 'v0.8.1'
+version = 'v0.9.8'
 local score = '?'
 local highscore = 0
-local reflectCount = 0
 local speedupOnCount = 3
 local speedupValue = 1.2
 local paddleSpeedUpValue = 1.15
-local gamestate = 'mainmenu' --todo gameover OK | play OK | options | pausemenu
+local gamestate = 'mainmenu'
 local highscoreGet = false
 local gameOptions = {}
-gameOptions.volumeSE = 5
 --
 --sounds
 sounds = {}
@@ -21,7 +19,7 @@ sounds.loadSounds = function()
 end
 sounds.play = function(sound)
   if sound:isPlaying() then
-    sound:rewind()
+    sound:seek(0)
   else
     sound:play()
   end
@@ -30,23 +28,23 @@ end
 --colors
 local colors = {}
 colors.red = {
-  value = {200, 40, 40, 255}, 
+  value = {0.75, 0.15, 0.15, 1}, 
   name = 'red'}
 colors.green = {
-  value = {40, 200, 40, 255}, 
+  value = {0.15, 0.75, 0.15, 1}, 
   name = 'green'}
 colors.blue = {
-  value = {40, 40, 220, 255}, 
+  value = {0.15, 0.15, 0.75, 1}, 
   name = 'blue'}
 local colorsSide = {}
 colorsSide.gray = {
-  value = {180, 180, 180, 255},
+  value = {0.66, 0.66, 0.66, 1},
   name = 'gray'}
 colorsSide.white = {
-  value = {255, 255, 255, 255},
+  value = {1, 1, 1, 1},
   name = 'white'}
 colorsSide.black = {
-  value = {0, 0, 0, 225},
+  value = {0, 0, 0, 1},
   name = 'black'}
 --
 --paddle
@@ -62,6 +60,7 @@ paddle.update = function(dt)
   if not (love.keyboard.isScancodeDown('left') or love.keyboard.isScancodeDown('right')) then
     paddle.speed = vector(0, 0)
   end
+  animation.addParticle(paddle.position, paddle.size, paddle.color, vector(0,0), vector(0, -20), {0,0,0, 1/0.1}, 0.1)
   paddle.position = paddle.position + dt*paddle.speed  
 end
 paddle.draw = function()
@@ -79,10 +78,11 @@ ball.init = function()
   ball.size = vector(50, 50)
   ball.speed = vector.fromPolar(math.pi/2 + math.pi * love.math.random()/4, 300)
   ball.color = colors.red
+  ball.reflectCount = 0
 end
 ball.update = function(dt)
   ball.position = ball.position + dt*ball.speed
-  animation.addParticle(ball.position, ball.size, ball.color, vector(0,0), vector(-100, -100), {0,0,0, 255*2}, 0.5)
+  animation.addParticle(ball.position, ball.size, ball.color, vector(0,0), vector(-100, -100), {0,0,0, 1/0.5}, 0.5)
 end
 ball.draw = function()
   love.graphics.setColor(ball.color.value)
@@ -134,7 +134,6 @@ ball.reboundFromPaddle = function(shift, paddle)
       ball.speed.y = -math.abs(ball.speed.y)
    end
 end
-
 ball.determineActualShift = function(shiftBall)
    local actualShift = vector(0, 0)
    local minShift = math.min(math.abs(shiftBall.x ),
@@ -147,7 +146,7 @@ ball.determineActualShift = function(shiftBall)
    return actualShift
 end
 ball.minAngle = function()
-   local minHorizontalAngle = math.rad( 20 )
+   local minHorizontalAngle = math.rad(20)
    local vX, vY = ball.speed:unpack()
    local newVX, newVY = vX, vY
    reboundAngle = math.abs(math.atan(vY/vX))
@@ -236,14 +235,14 @@ walls.resolveState = function(state)
   elseif state == 'score' then
     score = score + 1
     ball.setRandomColor()
-    animation.addParticle(ball.position, ball.size, ball.color, vector(0,0), vector(100, 100), {0,0,0, 255}, 1)
-    reflectCount = reflectCount + 1
-    if reflectCount >= speedupOnCount then
-      reflectCount = 0
+    animation.addParticle(ball.position, ball.size, ball.color, vector(0,0), vector(100, 100), {0,0,0, 1}, 1)
+    ball.reflectCount = ball.reflectCount + 1
+    if ball.reflectCount >= speedupOnCount then
+      ball.reflectCount = 0
       ball.speed = ball.speed * speedupValue
       paddle.defSpeed = paddle.defSpeed * paddleSpeedUpValue
       ball.randomizeAngleFromWall()
-      animation.addParticle(ball.position, ball.size, colorsSide.white, vector(0,0), vector(300, 300), {0,0,0, 255*2}, 0.5)
+      animation.addParticle(ball.position, ball.size, colorsSide.white, vector(0,0), vector(300, 300), {0,0,0, 1/1.5}, 1.5)
     end
     sounds.play(sounds.hit2)
   elseif state == 'lose' then
@@ -362,7 +361,7 @@ function reset()
   ball.init()
   animation.clear()
   score = 0
-  reflectCount = 0
+  ball.reflectCount = 0
   loadHighscore()
   highscoreGet = false
   gamestate = 'play'
@@ -370,6 +369,8 @@ end
 function initgame()
   walls.init()
   loadHighscore()
+  config.loadConfig()
+  love.audio.setVolume(gameOptions.volumeSE/10)
   menu.init()
   options.init()
 end
@@ -399,7 +400,7 @@ function saveHighscore()
   love.filesystem.write("score.dat", savestring)
 end
 function writeSidebar()
-  local colorHue = {0, 0, 255/8, 55}
+  local colorHue = {0, 0, 1/8, 0.2}
   local colorT = deepCopy(colors.red)
   doDColor(colorT, colorHue)
   love.graphics.setColor(colorT.value)
@@ -418,9 +419,9 @@ function writeSidebar()
   colorT = deepCopy(colorsSide.white)
   doDColor(colorT, colorHue)
   love.graphics.setColor(colorT.value)
-  love.graphics.print('PADDLE', 590+4, 40, 0, 2, 2)
+  love.graphics.print('PADDLE', 590+3, 40, 0, 2, 2)
   
-  love.graphics.print(version, 660+4, 100, 0, 1.5, 1)
+  love.graphics.print(version, 660+3, 100, 0, 1.5, 1)
   
   love.graphics.setColor(colors.red.value)
   love.graphics.print('T', 450, 20, 0, 3, 3)
@@ -454,6 +455,28 @@ function backToMenu()
   gamestate = 'mainmenu'
   score = '?'
 end
+--work with files
+function fileExists(file)
+  local f = io.open(file, "rb")
+  if f then f:close() end
+  return f ~= nil
+end
+function linesFrom(file)
+  if not fileEists(file) then return {} end
+  lines = {}
+  for line in io.lines(file) do 
+    lines[#lines + 1] = line
+  end
+  return lines
+end
+function readFormatted(file)
+  lines = linesFrom(file)
+  local list = {}
+  for line in lines do
+    
+  end
+end
+--
 sign = math.sign or function(x) return x < 0 and -1 or x > 0 and 1 or 0 end
 --
 --mainmenu
@@ -486,7 +509,7 @@ menu.controlButtons = function(key)
   elseif key == 'down' and menu.currentButton ~= #menu.buttons then
     menu.currentButton = menu.currentButton + 1
     menu.buttonHighlight(menu.buttons, menu.buttons[menu.currentButton])
-  elseif key == 'return' then
+  elseif key == 'return' or  key == 'z' then
     if menu.buttons[menu.currentButton].f then menu.buttons[menu.currentButton].f() end
   end
 end
@@ -582,10 +605,13 @@ options.controlButtons = function(key)
   elseif key == 'down' and options.currentButton ~= #options.buttons then
     options.currentButton = options.currentButton + 1
     menu.buttonHighlight(options.buttons, options.buttons[options.currentButton])
-  elseif key == 'return' then
+  elseif key == 'return' or key == 'z' then
     if options.buttons[options.currentButton].f then options.buttons[options.currentButton].f(key) end
   elseif key == 'left' or key == 'right' then
     if options.buttons[options.currentButton].fLR then options.buttons[options.currentButton].fLR(key) end
+  elseif key == 'escape' or  key == 'x' then
+    config.saveConfig()
+    gamestate = 'mainmenu'
   end
 end
 options.volumeLR = function(key)
@@ -602,6 +628,32 @@ options.resetHighscore = function()
   saveHighscore()
   score = '?'
   loadHighscore()
+end
+--
+--pause
+pause = {}
+pause.draw = function()
+  love.graphics.setColor(0,0,0,120)
+  love.graphics.rectangle('fill', 20, 20, 400, 560)
+  
+  love.graphics.setColor(colorsSide.white.value)
+  love.graphics.print('PAUSED', 60, 200, 0, 3, 3)
+  
+  love.graphics.print('Press Escape to continue', 40, 280, 0, 1, 1)
+  love.graphics.print('Press q to leave to main menu', 25, 310, 0, 1, 1)
+end
+--
+--config
+config = {}
+config.loadConfig = function()
+  local savestring = love.filesystem.read("config.dat")
+  if not pcall(function() gameOptions.volumeSE = 0 + savestring end) then 
+    gameOptions.volumeSE = 3
+  end
+end
+config.saveConfig = function(name, value)
+  local savestring = gameOptions.volumeSE
+  love.filesystem.write("config.dat", savestring)
 end
 --
 --love
@@ -644,18 +696,25 @@ function love.keypressed(key, scancode, isrepeat)
            scancode == 'z' or
            scancode == 'x' or
            scancode == 'c' then
-      animation.addParticle(paddle.position, paddle.size, paddle.color, vector(0,0), vector(200, 200), {0,0,0, 255/0.15}, 0.15)
+      animation.addParticle(paddle.position, paddle.size, paddle.color, vector(0,0), vector(200, 200), {0,0,0, 1/0.15}, 0.15)
+    end
+    if scancode == 'escape' then
+      gamestate = 'pause'
     end
   elseif gamestate == 'mainmenu' then
     menu.controlButtons(scancode)
   elseif gamestate == 'options' then
+    options.controlButtons(scancode)
+  elseif gamestate == 'pause' then
     if scancode == 'escape' then
-      gamestate = 'mainmenu'
-    else
-      options.controlButtons(scancode)
+      gamestate = 'play'
+    elseif scancode == 'q' then
+      if highscore < score then
+        saveHighscore()
+      end
+      backToMenu()
     end
-  end
-  if gamestate == 'gameover' then
+  elseif gamestate == 'gameover' then
     if scancode == 'return' then
       reset()
     elseif scancode == 'escape' then
@@ -664,16 +723,22 @@ function love.keypressed(key, scancode, isrepeat)
   end
 end
 function love.draw()
-  if gamestate == 'play' or gamestate == 'gameover' then
+  walls.draw()
+  writeSidebar()
+  animation.draw()
+  if gamestate == 'play' or gamestate == 'gameover' or gamestate == 'pause' then
     paddle.draw()
     ball.draw()
+    if gamestate == 'pause' then
+      pause.draw()
+    end
   elseif gamestate == 'mainmenu' then
     menu.draw()
   elseif gamestate == 'options' then
     options.draw()
   end
   if gamestate == 'gameover' then
-    local colorHue = {0, 0, 255/8, 55}
+    local colorHue = {0, 0, 1/8, 0.2}
     local colorT = deepCopy(colorsSide.white)
     doDColor(colorT, colorHue)
     love.graphics.setColor(colorT.value)
@@ -685,7 +750,4 @@ function love.draw()
       love.graphics.print('NEW HIGH SCORE!', 80,350)
     end
   end
-  walls.draw()
-  writeSidebar()
-  animation.draw()
 end
